@@ -1,0 +1,16 @@
+# I. Defining the Essentials
+
+
+## Part I. Defining the Essentials
+
+The chapters in Part IPart I lay the intellectual foundation for the agentic mesh. They introduce readers to the essential ideas—what agents are, why they matter, and how they differ from earlier generations of artificial intelligence and automation. This part of the book is designed to give both technical and nontechnical readers a shared vocabulary for understanding how agents fit into the broader arc of computing. By the end of this part, you will see that the agentic mesh is not an isolated innovation but the next logical step in a long continuum: from machine learning to generative AI (GenAI) to autonomous systems that can act, collaborate, and evolve.Chapter 1, “Understanding Agentic Mesh: The Essentials”
+
+Chapter 1, “Understanding Agentic Mesh:
+
+The Essentials”, introduces all of the major concepts, albeit at a very high level, to describe basic concepts that will be elaborated upon later in the book.Chapter 2, “Agentic Past, Present, and Future”
+
+Chapter 2, “Agentic Past, Present, and Future”, offers a concise history of how we arrived at this point. It traces the lineage from early statistical learning to modern neural networks, and from expert systems to large language models (LLMs) and finally to agents. This historical framing is important because it shows that each stage solved one bottleneck while revealing the next. Machine learning taught computers to recognize patterns; GenAI taught them to create; agents now teach them to act. Understanding that lineage helps explain not only where agents came from but also why they represent a qualitative leap rather than a mere extension of prior tools.Chapter 3, “Agents Versus AI Workflow”
+
+Chapter 3, “Agents Versus AI Workflow”, clarifies one of the most common sources of confusion in today’s AI discourse. Many organizations still rely on workflows—linear, predefined sequences of tasks—to automate processes. Agents, by contrast, are adaptive and goal-driven; they decide how to achieve outcomes rather than merely following prescribed steps. This distinction is critical because it reframes automation itself: from systems that execute instructions to systems that reason and make choices. By comparing agents and workflows, this chapter helps readers grasp what makes agents transformative and why they require a fundamentally different way of thinking about design, governance, and reliability.Chapter 4, “Agent Basics”
+
+Chapter 4, “Agent Basics”, discusses basic agent concepts where we use a human analogy to make these concepts tangible. You are invited to think of an individual agent as a person with a role and skills; a team of people is like a fleet of agents, and an organization—made up of many teams or people—is like an ecosystem of agents. Just as individuals bring unique abilities to their work, agents specialize in particular functions; just as teams coordinate to achieve shared goals, fleets of agents collaborate to finish complex tasks; and just as organizations manage communication, governance, and knowledge exchange among teams, ecosystems of agents coordinate fleets to produce outcomes far greater than any one agent could accomplish alone.
