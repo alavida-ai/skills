@@ -99,6 +99,38 @@ Created by [@nicobailon](https://github.com/nicobailon). MIT licensed.
 
 ---
 
+## Versioning
+
+Each skill is versioned independently using [semantic versioning](https://semver.org/). Git tags use the format `{skill-name}/v{semver}` to avoid collisions in a multi-skill repo.
+
+| Change Type | Version Bump | Example |
+|-------------|-------------|---------|
+| Breaking (removed sections, renamed templates, changed workflow) | Major | `v1.0.0` → `v2.0.0` |
+| Additive (new templates, new references, new sections) | Minor | `v1.0.0` → `v1.1.0` |
+| Bug fixes, library version bumps | Patch | `v1.0.0` → `v1.0.1` |
+
+Tag a new version when: templates change, references update, workflow changes, or libraries bump. Every tagged release should have a corresponding `CHANGELOG.md` entry in the skill's directory.
+
+```bash
+# Example: tag a new visual-explainer release
+git tag visual-explainer/v1.1.0
+git push origin visual-explainer/v1.1.0
+```
+
+## For Downstream Consumers
+
+Skills in this repo are **base skills** — other projects adapt them for specific contexts (e.g., a workbench-specific visualization skill that wraps `visual-explainer` with domain conventions).
+
+Adapted skills declare lineage via a `based-on` field in their SKILL.md frontmatter:
+
+```yaml
+based-on: github.com/alavida-ai/skills/visual-explainer@v1.0.0
+```
+
+When tagging a new version, consider downstream impact — adapted skills pin to a specific version and need to explicitly absorb updates.
+
+---
+
 ## Installation
 
 ### Option 1: CLI Install (Recommended)
