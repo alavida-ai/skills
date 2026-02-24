@@ -1,0 +1,44 @@
+{
+  "description": "Compound learning lifecycle — session bootstrap, attention management, and completion verification",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\"",
+            "timeout": 10,
+            "statusMessage": "Bootstrapping session..."
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking workspace state..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-complete.sh\"",
+            "timeout": 10,
+            "statusMessage": "Verifying session completion..."
+          }
+        ]
+      }
+    ]
+  }
+}
