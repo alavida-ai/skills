@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.0] - 2026-02-24
+
+### Breaking Changes
+- **2-phase workflow**: 6-step workflow (Interrogate → Profile → Think → Architect → Style → Deliver) restructured into Phase 1: Design and Phase 2: Render. Phases can be delegated independently (e.g., Phase 1 to a design subagent, Phase 2 to a renderer).
+- **Output path changed**: From flat file `~/.agent/diagrams/{name}.html` to folder `~/.agent/diagrams/{name}/` containing `1-design-brief.md`, `2-render-notes.md`, and `{name}.html`.
+
+### Added
+- **Design brief artifact**: Phase 1 outputs a structured `1-design-brief.md` capturing reader task, key takeaway, audience profile, Visualization Wheel position, encoding selection, information architecture, reading path, and template selection — all methodology decisions made before any HTML is written.
+- **Render notes artifact**: Phase 2 outputs `2-render-notes.md` recording template used, library choices, and deviations from the design brief.
+- **Phase 1 quality gate**: Validates design brief completeness before rendering begins.
+- **Phase 2 quality gate**: Extends existing quality checks with render notes verification.
+
+### Changed
+- Steps 1-4 (Interrogate, Profile, Think, Architect) now live under Phase 1 as sub-steps
+- Steps 5-6 (Style, Deliver) now live under Phase 2 as sub-steps, with a new "Read Template and References" step preceding them
+- Template selection happens in Phase 1 (decision), template reading happens in Phase 2 (execution)
+
 ## [0.3.0] - 2026-02-24
 
 ### Rendering Capabilities

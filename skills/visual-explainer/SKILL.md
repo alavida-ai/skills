@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a browser to view generated HTML files. Optional surf-cli for AI image generation.
 metadata:
   author: nicobailon
-  version: "0.3.0"
+  version: "2.0.0"
 ---
 
 # Visual Explainer
@@ -16,7 +16,15 @@ Generate self-contained HTML files for technical diagrams, visualizations, and d
 
 ## Workflow
 
-### 1. Interrogate
+Two phases with a design brief artifact between them. Phase 1 makes all methodology and architecture decisions. Phase 2 renders the HTML. The phases can run in the same session or be delegated separately (e.g., Phase 1 to a subagent that focuses on design, Phase 2 to a renderer).
+
+### Phase 1: Design
+
+Phase 1 produces a **design brief** — a markdown file that captures every methodology decision before any HTML is written. This separation prevents the pull of rendering from short-circuiting design thinking.
+
+Write the design brief to `~/.agent/diagrams/{name}/1-design-brief.md`.
+
+#### 1. Interrogate
 
 Before anything visual, answer three questions. These constrain every decision downstream.
 
@@ -26,15 +34,15 @@ Before anything visual, answer three questions. These constrain every decision d
 
 3. **What does the reader already know?** Expert → higher density, less annotation. General → lower density, more annotation. This sets the Visualization Wheel's density axis.
 
-### 2. Profile
+#### 2. Profile
 
 Position the graphic on Cairo's Visualization Wheel (abstract↔figurative, functional↔decorative, dense↔light, multidimensional↔unidimensional, original↔familiar). Read `./references/methodology-playbook.md` for the full wheel and the 10% rule.
 
 **Select encoding** using the Cleveland-McGill hierarchy based on the reader task from Step 1. The playbook has the full decision matrix (task → encoding → chart form → avoid). Don't pick a chart type by instinct — match it to the task.
 
-### 3. Think
+#### 3. Think
 
-Before writing HTML, commit to a direction. Read `./references/brand.md` for the locked brand identity — palette, fonts, and surface treatment are fixed across all output.
+Commit to a direction.
 
 **Who is looking?** A developer understanding a system? A PM seeing the big picture? A team reviewing a proposal? This shapes information density and visual complexity.
 
@@ -48,7 +56,7 @@ Before writing HTML, commit to a direction. Read `./references/brand.md` for the
 
 Layout, density, and animation vary per page. Colors, fonts, and surface treatment do not — they come from brand.md.
 
-### 4. Architect
+#### 4. Architect
 
 Build a **narrative backbone** before selecting a template. The visual should tell a story, not just display data.
 
@@ -62,11 +70,61 @@ Build a **narrative backbone** before selecting a template. The visual should te
 
 **Apply Gestalt grouping**: Related data → proximity. Related series → similarity. Relationships → connectedness (lines override all other grouping). Sections → closure (prefer whitespace over boxes).
 
-**Now select a template.** Read the reference template before generating. Don't memorize it — read it each time to absorb the patterns.
-- For text-heavy architecture overviews (card content matters more than topology): read `./templates/architecture.html`
-- For flowcharts, sequence diagrams, ER, state machines, mind maps: read `./templates/mermaid-flowchart.html`
-- For data tables, comparisons, audits, feature matrices: read `./templates/data-table.html`
-- For scatter plots, line/area charts, radar charts, treemaps, or pages mixing data chart types: read `./templates/data-chart.html`
+**Select a template** (don't read it yet — that's Phase 2):
+- For text-heavy architecture overviews (card content matters more than topology): `./templates/architecture.html`
+- For flowcharts, sequence diagrams, ER, state machines, mind maps: `./templates/mermaid-flowchart.html`
+- For data tables, comparisons, audits, feature matrices: `./templates/data-table.html`
+- For scatter plots, line/area charts, radar charts, treemaps, or pages mixing data chart types: `./templates/data-chart.html`
+
+Note whether the page needs responsive nav (4+ sections).
+
+#### Design Brief Format
+
+Write `1-design-brief.md` with these sections:
+
+```markdown
+# Design Brief: {name}
+
+## Reader Task
+{task from Interrogate step 1}
+
+## Key Takeaway
+{sentence from Interrogate step 2}
+
+## Audience Profile
+{expertise level from Interrogate step 3}
+
+## Visualization Wheel Position
+{5 axis positions from Profile}
+
+## Encoding Selection
+{Cleveland-McGill encoding and chart form}
+
+## Information Architecture
+- Entry layer: {what dominates on load}
+- Context layer: {supporting evidence}
+- Detail layer: {progressive disclosure}
+- Annotation layer: {editorial callouts}
+
+## Reading Path
+{first → second → third}
+
+## Template Selection
+{which template and why}
+
+## Rendering Notes
+{diagram type, library choices, nav needs, any special considerations}
+```
+
+### Phase 2: Render
+
+Phase 2 reads the design brief and produces the HTML. Start by reading the brief and the selected template.
+
+Read `./references/brand.md` for the locked brand identity — palette, fonts, and surface treatment are fixed across all output.
+
+#### 1. Read Template and References
+
+Read the template selected in the design brief. Don't memorize it — read it each time to absorb the patterns.
 
 **For CSS/layout patterns and SVG connectors**, read `./references/css-patterns.md`.
 
@@ -124,7 +182,7 @@ See `./references/css-patterns.md` for image container styles (hero banners, inl
 
 **Prompt craft:** Match the image to the page's palette and aesthetic direction. Specify the style (3D render, technical illustration, watercolor, isometric, flat vector, etc.) and mention dominant colors from your CSS variables. Use `--aspect-ratio 16:9` for hero banners, `--aspect-ratio 1:1` for inline illustrations. Keep prompts specific — "isometric illustration of a message queue with cyan nodes on dark navy background" beats "a diagram of a queue."
 
-### 5. Style
+#### 2. Style
 
 Apply these principles to every diagram:
 
@@ -145,13 +203,22 @@ Apply these principles to every diagram:
 - **Decoration audit**: For each visual element, is it encoding data or just looking nice? Decoration is fine — but conscious, not default.
 - **Contrast hierarchy**: Bright/saturated = important data. Subdued/gray = context. Use preattentive features (color, size, weight) for instant hierarchy. Never make everything equally vivid.
 
-### 6. Deliver
+#### 3. Deliver
 
-**Output location:** Write to `~/.agent/diagrams/`. Use a descriptive filename based on content: `modem-architecture.html`, `pipeline-flow.html`, `schema-overview.html`. The directory persists across sessions.
+**Record render decisions** in `~/.agent/diagrams/{name}/2-render-notes.md` — which template was used, library choices, any deviations from the design brief. This is a short log, not a second brief.
+
+**Output location:** Write the HTML to `~/.agent/diagrams/{name}/{name}.html`. The directory persists across sessions. The full output folder:
+
+```
+~/.agent/diagrams/{name}/
+├── 1-design-brief.md     ← Phase 1 output (methodology decisions)
+├── 2-render-notes.md      ← Phase 2 output (template/library choices)
+└── {name}.html            ← Final HTML visualization
+```
 
 **Open in browser:**
-- macOS: `open ~/.agent/diagrams/filename.html`
-- Linux: `xdg-open ~/.agent/diagrams/filename.html`
+- macOS: `open ~/.agent/diagrams/{name}/{name}.html`
+- Linux: `xdg-open ~/.agent/diagrams/{name}/{name}.html`
 
 **Tell the user** the file path so they can re-open or share it.
 
@@ -251,7 +318,19 @@ Every diagram is a single self-contained `.html` file. No external assets except
 
 ## Quality Checks
 
+### Phase 1 Gate
+
+Before moving to Phase 2, verify the design brief:
+- **Design brief exists** at `~/.agent/diagrams/{name}/1-design-brief.md`
+- **All sections populated** — no TBD or placeholder values
+- **Reader task is specific** — one of the 6 task types, not "understand everything"
+- **Key takeaway is a single sentence** — not a paragraph
+- **Template selection has a reason** — not just "it seemed right"
+
+### Phase 2 Gate
+
 Before delivering, verify:
+- **Render notes exist** at `~/.agent/diagrams/{name}/2-render-notes.md`
 - **The squint test**: Blur your eyes. Can you still perceive hierarchy? Are sections visually distinct?
 - **The swap test**: Would replacing your fonts and colors with a generic dark theme make this indistinguishable from a template? If yes, push the aesthetic further.
 - **Both themes**: Toggle your OS between light and dark mode. Both should look intentional, not broken.
