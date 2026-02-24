@@ -380,6 +380,181 @@ document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
 
 Scroll-to-zoom requires Ctrl/Cmd+scroll to avoid hijacking normal page scroll. Click-and-drag panning activates only when zoomed in (zoom > 1). Cursor changes to `grab`/`grabbing` to signal the behavior. The zoom range is capped at 0.3x–5x.
 
+## SVG Chart Containers
+
+Patterns for Observable Plot, D3.js, and other SVG-based chart libraries. Plot renders `<figure>` with `<svg>` inside; D3 renders raw `<svg>`. Both need containers for theming and responsive behavior.
+
+### Observable Plot Container
+
+```css
+.chart-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* Plot renders <figure> — override its default margin and font */
+.chart-wrap figure {
+  margin: 0;
+}
+
+/* Plot SVG inherits text color from CSS */
+.chart-wrap svg {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* Axis labels and tick text */
+.chart-wrap [aria-label="x-axis"] text,
+.chart-wrap [aria-label="y-axis"] text {
+  fill: var(--text-dim);
+}
+
+/* Plot tip (tooltip) styling */
+.chart-wrap figure [aria-label*="tip"] {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+```
+
+### Chart Title
+
+Monospace uppercase label above any chart — consistent with `.node__label` pattern.
+
+```css
+.chart-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-title::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+```
+
+### Chart Annotation
+
+Editorial callout overlaid on or near a chart area. Implements the methodology annotation layer — "Notice that X", "Key insight: Y".
+
+```css
+.chart-annotation {
+  position: absolute;
+  background: var(--surface-elevated);
+  border: 1px solid var(--accent);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  max-width: 220px;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 5;
+}
+
+.chart-annotation strong {
+  color: var(--accent);
+  display: block;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+```
+
+Position with `top`/`right`/`bottom`/`left` on the annotation, relative to a `position: relative` parent wrapping the chart.
+
+### Chart Grid
+
+Responsive 2-column grid for side-by-side charts. Stacks on mobile.
+
+```css
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.chart-grid > * {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .chart-grid { grid-template-columns: 1fr; }
+}
+```
+
+### D3 Chart Container
+
+For raw D3 SVG output (treemap, Sankey, force-directed). D3 doesn't wrap in `<figure>` — you provide the `<svg>` directly.
+
+```css
+.d3-chart-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.d3-chart-wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Treemap labels */
+.treemap-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--text);
+  pointer-events: none;
+}
+
+.treemap-label-small {
+  font-size: 9px;
+  fill: var(--text-dim);
+}
+
+/* Sankey diagram */
+.sankey-node rect {
+  stroke: var(--border-bright);
+  stroke-width: 1px;
+}
+
+.sankey-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--text);
+}
+
+.sankey-link {
+  fill: none;
+  stroke-opacity: 0.3;
+  transition: stroke-opacity 0.2s ease;
+}
+
+.sankey-link:hover {
+  stroke-opacity: 0.6;
+}
+```
+
 ## Grid Layouts
 
 ### Architecture Diagram (2-column with sidebar)

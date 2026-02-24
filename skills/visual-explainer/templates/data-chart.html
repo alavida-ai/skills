@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Velocity Analysis — Reference Template</title>
+<!--
+  Reference template for the visual-explainer skill: data charts.
+  Indigo/violet palette — distinct from terracotta (architecture), teal (mermaid),
+  and rose (data-table) templates so agents absorb variety.
+  Key patterns demonstrated:
+  - Observable Plot scatter chart (ESM import, dark mode, CSS-themable SVG)
+  - Chart.js radar chart (UMD script, canvas, multi-dataset overlay)
+  - D3.js treemap (ESM import, d3-hierarchy, categorical color)
+  - Methodology-driven narrative backbone (entry → context → detail layers)
+  - .chart-wrap, .chart-annotation, .d3-chart-wrap CSS patterns
+  - Sora + IBM Plex Mono font pairing
+  - Both light and dark themes via prefers-color-scheme
+  - Staggered animations with mixed types (fadeUp, fadeScale)
+  - Responsive chart grid stacking on mobile
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ============ THEME ============ */
+  :root {
+    --font-body: 'Sora', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #f5f3ff;
+    --surface: #ffffff;
+    --surface-elevated: #faf8ff;
+    --border: rgba(0, 0, 0, 0.07);
+    --border-bright: rgba(0, 0, 0, 0.14);
+    --text: #1e1b4b;
+    --text-dim: #6b7280;
+    --accent: #6366f1;
+    --accent-dim: rgba(99, 102, 241, 0.08);
+
+    --chart-1: #6366f1;
+    --chart-2: #8b5cf6;
+    --chart-3: #a78bfa;
+    --chart-4: #c4b5fd;
+    --chart-5: #059669;
+
+    --green: #16a34a;
+    --green-dim: rgba(22, 163, 74, 0.08);
+    --red: #dc2626;
+    --red-dim: rgba(220, 38, 38, 0.08);
+    --orange: #d97706;
+    --orange-dim: rgba(217, 119, 6, 0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f0b1e;
+      --surface: #1a1533;
+      --surface-elevated: #231d42;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-bright: rgba(255, 255, 255, 0.12);
+      --text: #e8e4f7;
+      --text-dim: #8b849e;
+      --accent: #818cf8;
+      --accent-dim: rgba(129, 140, 248, 0.12);
+
+      --chart-1: #818cf8;
+      --chart-2: #a78bfa;
+      --chart-3: #c4b5fd;
+      --chart-4: #ddd6fe;
+      --chart-5: #34d399;
+
+      --green: #4ade80;
+      --green-dim: rgba(74, 222, 128, 0.1);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.1);
+      --orange: #fbbf24;
+      --orange-dim: rgba(251, 191, 36, 0.1);
+    }
+  }
+
+  /* ============ RESET + BASE ============ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 30% 0%, var(--accent-dim) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    padding: 48px 24px;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* Every grid/flex child must be able to shrink */
+  .container > *, .kpi-row > *, .chart-grid > * { min-width: 0; }
+  body { overflow-wrap: break-word; }
+
+  /* ============ ENTRY LAYER ============ */
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .hero__tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .hero__title {
+    font-size: clamp(28px, 5vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+
+  .hero__sub {
+    font-size: 15px;
+    color: var(--text-dim);
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* KPI cards */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 32px 0 48px;
+  }
+
+  .kpi-card {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    animation: fadeScale 0.35s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.06s);
+  }
+
+  .kpi-card__value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+  }
+
+  .kpi-card__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .kpi-card__trend {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  .kpi-card__trend--up { color: var(--green); }
+  .kpi-card__trend--down { color: var(--red); }
+
+  /* ============ SECTIONS ============ */
+  .section {
+    margin-bottom: 48px;
+    animation: fadeUp 0.4s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.05s);
+  }
+
+  .section__label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section__label::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .section__title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .section__desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    max-width: 640px;
+  }
+
+  /* ============ CHART CONTAINERS ============ */
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .chart-wrap figure { margin: 0; }
+  .chart-wrap svg {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .chart-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+  }
+  .chart-container canvas { max-height: 340px; }
+
+  .d3-chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    overflow: hidden;
+  }
+  .d3-chart-wrap svg { width: 100%; height: auto; display: block; }
+
+  .chart-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chart-title::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* Annotation callout */
+  .chart-annotation {
+    position: absolute;
+    background: var(--surface-elevated);
+    border: 1px solid var(--accent);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text);
+    max-width: 200px;
+    line-height: 1.5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    z-index: 5;
+  }
+  .chart-annotation strong {
+    color: var(--accent);
+    display: block;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+
+  /* Chart grid for side-by-side */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  /* D3 sub-patterns */
+  .treemap-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    pointer-events: none;
+  }
+
+  /* ============ DETAIL LAYER ============ */
+  details.collapsible {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 48px;
+  }
+
+  details.collapsible summary {
+    padding: 14px 20px;
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    transition: background 0.15s ease;
+  }
+  details.collapsible summary:hover { background: var(--surface-elevated); }
+  details.collapsible summary::-webkit-details-marker { display: none; }
+  details.collapsible summary::before {
+    content: '▸';
+    font-size: 11px;
+    color: var(--text-dim);
+    transition: transform 0.15s ease;
+  }
+  details.collapsible[open] summary::before { transform: rotate(90deg); }
+
+  .collapsible__body {
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+  .collapsible__body p { margin-bottom: 8px; }
+  .collapsible__body strong { color: var(--text); }
+
+  /* ============ ANIMATIONS ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeScale {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    body { padding: 24px 16px; }
+    .chart-grid { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ===== ENTRY LAYER ===== -->
+  <div class="hero" style="--i: 0">
+    <div class="hero__tag">Q4 2025 Sprint Review</div>
+    <h1 class="hero__title">Team Velocity Analysis</h1>
+    <p class="hero__sub">After seeing this, the reader should understand where effort concentrates, which capabilities are strongest, and how work distributes across categories.</p>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card" style="--i: 0">
+      <div class="kpi-card__value">247</div>
+      <div class="kpi-card__label">Story Points</div>
+      <div class="kpi-card__trend kpi-card__trend--up">+18% vs Q3</div>
+    </div>
+    <div class="kpi-card" style="--i: 1">
+      <div class="kpi-card__value">42</div>
+      <div class="kpi-card__label">Avg Velocity</div>
+      <div class="kpi-card__trend kpi-card__trend--up">+5 pts</div>
+    </div>
+    <div class="kpi-card" style="--i: 2">
+      <div class="kpi-card__value">89%</div>
+      <div class="kpi-card__label">Completion Rate</div>
+      <div class="kpi-card__trend kpi-card__trend--down">-3%</div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 1: SCATTER (Observable Plot) ===== -->
+  <div class="section" style="--i: 3">
+    <div class="section__label">Correlation</div>
+    <h2 class="section__title">Effort vs Impact</h2>
+    <p class="section__desc">Each dot represents a delivered initiative. Quick wins cluster in the top-left — high impact for low effort. Strategic bets live top-right.</p>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Initiative Portfolio Map</div>
+      <div id="scatter-plot"></div>
+      <div class="chart-annotation" style="top: 24px; right: 24px;">
+        <strong>Notice</strong>
+        Auth cache and error pages delivered outsized impact for minimal effort — classic quick wins.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 2: RADAR (Chart.js) ===== -->
+  <div class="section" style="--i: 5">
+    <div class="section__label">Profile</div>
+    <h2 class="section__title">Team Capability Wheel</h2>
+    <p class="section__desc">Radar overlay comparing current capability levels against Q1 targets. Gaps indicate where to invest next quarter.</p>
+
+    <div class="chart-container">
+      <div class="chart-title">Current vs Target Profile</div>
+      <canvas id="radar-chart" height="340"></canvas>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 3: TREEMAP (D3.js) ===== -->
+  <div class="section" style="--i: 7">
+    <div class="section__label">Part-of-whole</div>
+    <h2 class="section__title">Work Distribution</h2>
+    <p class="section__desc">Where did the 247 story points actually go? Treemap shows relative allocation by category. Features dominate, but tech debt consumes a fifth of capacity.</p>
+
+    <div class="d3-chart-wrap">
+      <div class="chart-title">Story Points by Category</div>
+      <div id="treemap-chart"></div>
+    </div>
+  </div>
+
+  <!-- ===== DETAIL LAYER ===== -->
+  <details class="collapsible">
+    <summary>Methodology Notes</summary>
+    <div class="collapsible__body">
+      <p><strong>Chart type selection</strong> follows the Cleveland-McGill hierarchy from the methodology playbook:</p>
+      <p>The <strong>scatter plot</strong> (Observable Plot) encodes effort and impact as position on two axes — the most accurate encoding for the "Correlate" reader task. Category color is limited to 3 values (under the 5-color memory limit).</p>
+      <p>The <strong>radar chart</strong> (Chart.js) profiles the team across 6 dimensions. Two overlaid datasets (current vs target) use similarity (same shape) and color difference to invite comparison. Radar is appropriate here because the reader task is "compare profiles", not "compare precise values".</p>
+      <p>The <strong>treemap</strong> (D3.js) shows part-of-whole distribution via containment and area — appropriate when the reader needs to see how a total decomposes into categories. Nested hierarchy (Features → Auth, Dashboard, API) adds a second level of detail.</p>
+      <p><strong>Annotation layer</strong>: The scatter plot includes an editorial callout highlighting the quick-win cluster. Each data-heavy section has a descriptive paragraph serving as contextual annotation.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+
+<!-- Chart.js (UMD — loaded first, used by radar) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+<script>
+  // Radar chart (Chart.js)
+  (function() {
+    var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var textColor = isDark ? '#8b849e' : '#6b7280';
+    var fontFamily = getComputedStyle(document.documentElement)
+      .getPropertyValue('--font-body').trim() || 'system-ui, sans-serif';
+
+    new Chart(document.getElementById('radar-chart'), {
+      type: 'radar',
+      data: {
+        labels: ['Speed', 'Reliability', 'Security', 'UX', 'Scalability', 'Cost Efficiency'],
+        datasets: [
+          {
+            label: 'Current',
+            data: [7, 8, 6, 5, 4, 7],
+            borderColor: isDark ? '#818cf8' : '#6366f1',
+            backgroundColor: isDark ? 'rgba(129,140,248,0.15)' : 'rgba(99,102,241,0.1)',
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: isDark ? '#818cf8' : '#6366f1',
+            pointBorderColor: isDark ? '#1a1533' : '#ffffff',
+            pointBorderWidth: 2,
+          },
+          {
+            label: 'Q1 Target',
+            data: [9, 9, 8, 8, 7, 6],
+            borderColor: isDark ? '#34d399' : '#059669',
+            backgroundColor: isDark ? 'rgba(52,211,153,0.1)' : 'rgba(5,150,105,0.06)',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 4,
+            pointBackgroundColor: isDark ? '#34d399' : '#059669',
+            pointBorderColor: isDark ? '#1a1533' : '#ffffff',
+            pointBorderWidth: 2,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            labels: { color: textColor, font: { family: fontFamily, size: 12 }, padding: 16 },
+          },
+        },
+        scales: {
+          r: {
+            angleLines: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+            grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)' },
+            pointLabels: { color: textColor, font: { family: fontFamily, size: 12 } },
+            ticks: { display: false },
+            suggestedMin: 0,
+            suggestedMax: 10,
+          }
+        }
+      }
+    });
+  })();
+</script>
+
+<!-- Observable Plot + D3 (ESM) -->
+<script type="module">
+  import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
+  import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  // ===== SCATTER PLOT (Observable Plot) =====
+  const scatterData = [
+    { effort: 2, impact: 8, category: "Quick win", label: "Auth cache" },
+    { effort: 7, impact: 9, category: "Strategic", label: "Event mesh" },
+    { effort: 5, impact: 3, category: "Low value", label: "UI polish" },
+    { effort: 1, impact: 5, category: "Quick win", label: "Error pages" },
+    { effort: 8, impact: 4, category: "Low value", label: "Legacy migration" },
+    { effort: 6, impact: 7, category: "Strategic", label: "API v2" },
+    { effort: 3, impact: 6, category: "Quick win", label: "Logging" },
+    { effort: 9, impact: 8, category: "Strategic", label: "Data pipeline" },
+    { effort: 4, impact: 2, category: "Low value", label: "CSS cleanup" },
+  ];
+
+  const scatterChart = Plot.plot({
+    style: { background: "transparent", color: isDark ? "#8b849e" : "#6b7280", fontFamily: "IBM Plex Mono, monospace" },
+    grid: true,
+    marginLeft: 50,
+    marginBottom: 40,
+    width: 860,
+    height: 360,
+    x: { label: "Effort (story points)", domain: [0, 10] },
+    y: { label: "Impact (1-10)", domain: [0, 10] },
+    color: {
+      legend: true,
+      domain: ["Quick win", "Strategic", "Low value"],
+      range: isDark
+        ? ["#34d399", "#818cf8", "#f87171"]
+        : ["#059669", "#6366f1", "#dc2626"]
+    },
+    marks: [
+      Plot.dot(scatterData, {
+        x: "effort", y: "impact", fill: "category",
+        r: 7, fillOpacity: 0.8,
+        tip: true, title: d => `${d.label}\n${d.category}\nEffort: ${d.effort}, Impact: ${d.impact}`
+      }),
+      // Quadrant dividers
+      Plot.ruleX([5], { stroke: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)", strokeDasharray: "4,4" }),
+      Plot.ruleY([5], { stroke: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)", strokeDasharray: "4,4" }),
+    ]
+  });
+
+  document.getElementById("scatter-plot").append(scatterChart);
+
+  // ===== TREEMAP (D3.js) =====
+  const treemapWidth = 860, treemapHeight = 360;
+
+  const treeData = {
+    name: "All Work",
+    children: [
+      { name: "Features", children: [
+        { name: "Auth", value: 45 },
+        { name: "Dashboard", value: 32 },
+        { name: "API v2", value: 28 },
+        { name: "Search", value: 15 },
+      ]},
+      { name: "Bugs", children: [
+        { name: "Critical", value: 22 },
+        { name: "Minor", value: 18 },
+      ]},
+      { name: "Tech Debt", children: [
+        { name: "Refactor", value: 30 },
+        { name: "Dependencies", value: 18 },
+      ]},
+      { name: "Docs", children: [
+        { name: "API Docs", value: 12 },
+        { name: "Runbooks", value: 8 },
+        { name: "Onboarding", value: 19 },
+      ]},
+    ]
+  };
+
+  const root = d3.hierarchy(treeData).sum(d => d.value).sort((a, b) => b.value - a.value);
+  d3.treemap().size([treemapWidth, treemapHeight]).padding(3).paddingTop(20).round(true)(root);
+
+  const categoryColors = isDark
+    ? { "Features": "#818cf8", "Bugs": "#f87171", "Tech Debt": "#fbbf24", "Docs": "#34d399" }
+    : { "Features": "#6366f1", "Bugs": "#dc2626", "Tech Debt": "#d97706", "Docs": "#059669" };
+
+  const svg = d3.create("svg")
+    .attr("viewBox", `0 0 ${treemapWidth} ${treemapHeight}`)
+    .attr("width", "100%")
+    .attr("height", "auto")
+    .style("font-family", "var(--font-mono)");
+
+  // Category group backgrounds
+  const groups = svg.selectAll("g.group")
+    .data(root.children)
+    .join("g")
+    .attr("class", "group");
+
+  groups.append("rect")
+    .attr("x", d => d.x0)
+    .attr("y", d => d.y0)
+    .attr("width", d => d.x1 - d.x0)
+    .attr("height", d => d.y1 - d.y0)
+    .attr("fill", "none")
+    .attr("stroke", d => categoryColors[d.data.name] || "#666")
+    .attr("stroke-opacity", 0.3)
+    .attr("rx", 4);
+
+  groups.append("text")
+    .attr("x", d => d.x0 + 6)
+    .attr("y", d => d.y0 + 13)
+    .text(d => d.data.name)
+    .attr("fill", d => categoryColors[d.data.name] || "#666")
+    .attr("font-size", "10px")
+    .attr("font-weight", "600")
+    .attr("text-transform", "uppercase")
+    .attr("letter-spacing", "1px");
+
+  // Leaf nodes
+  const leaf = svg.selectAll("g.leaf")
+    .data(root.leaves())
+    .join("g")
+    .attr("class", "leaf")
+    .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+  leaf.append("rect")
+    .attr("width", d => d.x1 - d.x0)
+    .attr("height", d => d.y1 - d.y0)
+    .attr("fill", d => categoryColors[d.parent.data.name] || "#666")
+    .attr("fill-opacity", isDark ? 0.3 : 0.15)
+    .attr("rx", 3);
+
+  leaf.append("text")
+    .attr("class", "treemap-label")
+    .attr("x", 6)
+    .attr("y", 16)
+    .text(d => (d.x1 - d.x0) > 50 ? d.data.name : "")
+    .attr("fill", isDark ? "#e8e4f7" : "#1e1b4b")
+    .attr("font-size", "11px");
+
+  leaf.append("text")
+    .attr("x", 6)
+    .attr("y", 30)
+    .text(d => (d.x1 - d.x0) > 50 ? `${d.data.value} pts` : "")
+    .attr("fill", isDark ? "#8b849e" : "#6b7280")
+    .attr("font-size", "9px");
+
+  document.getElementById("treemap-chart").append(svg.node());
+</script>
+
+</body>
+</html>

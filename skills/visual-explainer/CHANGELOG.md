@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.3.0] - 2026-02-24
+
+### Rendering Capabilities
+- Added **Observable Plot** as primary data visualization library — scatter, dot strip, line, area, heatmap examples with dark mode theming and CSS variable integration
+- Added **D3.js** for specialized layouts — treemap (`d3-hierarchy`) and Sankey (`d3-sankey`) examples with dark mode handling; choropleth documented but not templated (requires TopoJSON)
+- Expanded **Chart.js** documentation with line chart, radar chart, doughnut, and scatter examples following existing `isDark`/`textColor`/`gridColor` pattern
+- New routing table rows in SKILL.md: scatter/dot plot, line/area chart, heatmap/cell plot, radar/wheel chart, treemap, Sankey diagram, choropleth/geo
+- New "Data Charts / Statistical Visualizations" diagram type section with Plot vs D3 vs Chart.js guidance
+- Library loading guidance paragraph after routing table
+
+### References
+- `libraries.md` — Observable Plot section (CDN ESM import, dark mode/CSS variable theming, 5 examples matching Cleveland-McGill tasks), D3.js section (treemap + Sankey examples), 4 new Chart.js examples (line, radar, doughnut, scatter)
+- `css-patterns.md` — SVG chart container patterns (`.chart-wrap`, `.chart-title`, `.chart-annotation`, `.chart-grid`, `.d3-chart-wrap` with treemap/Sankey sub-patterns)
+- `methodology-playbook.md` — "Rendered by" column added to Cleveland-McGill decision matrix linking each chart form to its rendering library
+
+### Templates
+- `data-chart.html` — New reference template demonstrating Observable Plot (scatter), Chart.js (radar), and D3.js (treemap) in one page. Indigo/violet palette, Sora + IBM Plex Mono fonts, methodology-driven narrative backbone
+
+## [0.2.0] - 2026-02-24
+
+### Methodology Integration
+- New 6-step workflow: Interrogate → Profile → Think → Architect → Style → Deliver (was Think → Structure → Style → Deliver)
+- Step 1 "Interrogate": Reader task identification, single-takeaway forcing function, audience assessment
+- Step 2 "Profile": Cairo's Visualization Wheel quick-profile, Cleveland-McGill encoding selection based on reader task
+- Step 3 "Think" (enhanced): Aesthetic choice now grounded in the Visualization Wheel profile
+- Step 4 "Architect" (enhanced "Structure"): Layered information architecture (entry/context/detail/annotation layers), reading path definition, Gestalt grouping rules — then template selection
+- Step 5 "Style": Added three methodology guardrails (memory limit, decoration audit, contrast hierarchy)
+- Step 6 "Deliver": Added methodology quality gate table (task-encoding alignment, entry layer clarity, annotation presence, category count, Gestalt coherence, redundancy balance)
+
+### References
+- Added `methodology-playbook.md` — Interrogate checklist, Visualization Wheel, Cleveland-McGill decision matrix, layered information architecture, Gestalt grouping rules, methodology quality gates. Source: Cairo's *The Functional Art*
+
 ## [0.1.1] - 2026-02-19
 
 - Prompts no longer require the `pi-prompt-template-model` extension — each prompt now explicitly loads the skill itself

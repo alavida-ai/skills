@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires a browser to view generated HTML files. Optional surf-cli for AI image generation.
 metadata:
   author: nicobailon
-  version: "0.1.1"
+  version: "0.3.0"
 ---
 
 # Visual Explainer
@@ -16,33 +16,57 @@ Generate self-contained HTML files for technical diagrams, visualizations, and d
 
 ## Workflow
 
-### 1. Think (5 seconds, not 5 minutes)
+### 1. Interrogate
 
-Before writing HTML, commit to a direction. Don't default to "dark theme with blue accents" every time.
+Before anything visual, answer three questions. These constrain every decision downstream.
+
+1. **What task does the reader need to perform?** Present (read values) · Compare (judge sizes) · Organize (rank) · Correlate (see relationships) · Navigate (understand flow) · Explore (discover patterns). See `./references/methodology-playbook.md` for the full task taxonomy.
+
+2. **What's the one takeaway?** Complete: *"After seeing this, the reader should understand ___."* This sentence becomes the entry layer headline.
+
+3. **What does the reader already know?** Expert → higher density, less annotation. General → lower density, more annotation. This sets the Visualization Wheel's density axis.
+
+### 2. Profile
+
+Position the graphic on Cairo's Visualization Wheel (abstract↔figurative, functional↔decorative, dense↔light, multidimensional↔unidimensional, original↔familiar). Read `./references/methodology-playbook.md` for the full wheel and the 10% rule.
+
+**Select encoding** using the Cleveland-McGill hierarchy based on the reader task from Step 1. The playbook has the full decision matrix (task → encoding → chart form → avoid). Don't pick a chart type by instinct — match it to the task.
+
+### 3. Think
+
+Before writing HTML, commit to a direction. Read `./references/brand.md` for the locked brand identity — palette, fonts, and surface treatment are fixed across all output.
 
 **Who is looking?** A developer understanding a system? A PM seeing the big picture? A team reviewing a proposal? This shapes information density and visual complexity.
 
 **What type of diagram?** Architecture, flowchart, sequence, data flow, schema/ER, state machine, mind map, data table, timeline, or dashboard. Each has distinct layout needs and rendering approaches (see Diagram Types below).
 
-**What aesthetic?** Pick one and commit:
-- Monochrome terminal (green/amber on black, monospace everything)
-- Editorial (serif headlines, generous whitespace, muted palette)
-- Blueprint (technical drawing feel, grid lines, precise)
-- Neon dashboard (saturated accents on deep dark, glowing edges)
-- Paper/ink (warm cream background, hand-drawn feel, sketchy borders)
-- Hand-drawn / sketch (Mermaid `handDrawn` mode, wiggly lines, informal whiteboard feel)
-- IDE-inspired (borrow a real color scheme: Dracula, Nord, Catppuccin, Solarized, Gruvbox, One Dark)
-- Data-dense (small type, tight spacing, maximum information)
-- Gradient mesh (bold gradients, glassmorphism, modern SaaS feel)
+**What to vary** (within brand constraints — see Profile from Step 2):
+- Wheel leans **functional/dense** → tighter spacing, more data per section, compact chart labels
+- Wheel leans **decorative/light** → more whitespace, larger type, fewer sections
+- Wheel leans **original** → pair with extra redundancy (explain how to read the form)
+- Wheel leans **familiar** → conventional charts, invest in annotation quality
 
-Vary the choice each time. If the last diagram was dark and technical, make the next one light and editorial. The swap test: if you replaced your styling with a generic dark theme and nobody would notice the difference, you haven't designed anything.
+Layout, density, and animation vary per page. Colors, fonts, and surface treatment do not — they come from brand.md.
 
-### 2. Structure
+### 4. Architect
 
-**Read the reference template** before generating. Don't memorize it — read it each time to absorb the patterns.
+Build a **narrative backbone** before selecting a template. The visual should tell a story, not just display data.
+
+**Define layered information architecture** (see `./references/methodology-playbook.md`):
+- **Entry layer**: Headline takeaway from Step 1. KPI cards, hero summary. Dominates viewport on load — reader grasps the main point without scrolling.
+- **Context layer**: Supporting evidence — charts, tables, diagrams that substantiate the takeaway.
+- **Detail layer**: Exploration depth. Behind `<details>` elements or progressive disclosure. For readers who want to dig.
+- **Annotation layer**: Editorial callouts overlaid on data sections. "Notice that X", "This spike corresponds to Y". At least one per data-heavy section.
+
+**Define the reading path**: What does the reader see first → second → third? Sketch the layout as rectangles before choosing any chart type. Navigation: linear (scroll) or non-linear (tabs, sidebar)?
+
+**Apply Gestalt grouping**: Related data → proximity. Related series → similarity. Relationships → connectedness (lines override all other grouping). Sections → closure (prefer whitespace over boxes).
+
+**Now select a template.** Read the reference template before generating. Don't memorize it — read it each time to absorb the patterns.
 - For text-heavy architecture overviews (card content matters more than topology): read `./templates/architecture.html`
 - For flowcharts, sequence diagrams, ER, state machines, mind maps: read `./templates/mermaid-flowchart.html`
 - For data tables, comparisons, audits, feature matrices: read `./templates/data-table.html`
+- For scatter plots, line/area charts, radar charts, treemaps, or pages mixing data chart types: read `./templates/data-chart.html`
 
 **For CSS/layout patterns and SVG connectors**, read `./references/css-patterns.md`.
 
@@ -63,6 +87,15 @@ Vary the choice each time. If the last diagram was dark and technical, make the 
 | Data table | HTML `<table>` | Semantic markup, accessibility, copy-paste behavior |
 | Timeline | CSS (central line + cards) | Simple linear layout doesn't need a layout engine |
 | Dashboard | CSS Grid + Chart.js | Card grid with embedded charts |
+| Scatter / dot plot | **Observable Plot** | Declarative SVG, auto-axes, CSS-themable |
+| Line / area chart | **Observable Plot** | Trend encoding with automatic scales |
+| Heatmap / cell plot | **Observable Plot** | Dense matrix with color-scale encoding |
+| Radar / wheel chart | **Chart.js** (radar) | Canvas polar chart with clean API |
+| Treemap | **D3.js** (`d3-hierarchy`) | Hierarchical containment not in Plot |
+| Sankey diagram | **D3.js** (`d3-sankey`) | Flow-with-quantity layout |
+| Choropleth / geo | **D3.js** (`d3-geo` + TopoJSON) | Geographic projection |
+
+**Library loading**: Only include what the page needs. Most pages need zero JS. Observable Plot auto-resolves D3 dependencies — import D3 separately only for treemap/Sankey/geo layouts. Chart.js loads via UMD `<script src>`, Plot and D3 via ESM `<script type="module">`. See `./references/libraries.md` for CDN imports and working examples.
 
 **Mermaid theming:** Always use `theme: 'base'` with custom `themeVariables` so colors match your page palette. Use `look: 'handDrawn'` for sketch aesthetic or `look: 'classic'` for clean lines. Use `layout: 'elk'` for complex graphs (requires the `@mermaid-js/layout-elk` package — see `./references/libraries.md` for the CDN import). Override Mermaid's SVG classes with CSS for pixel-perfect control. See `./references/libraries.md` for full theming guide.
 
@@ -91,27 +124,15 @@ See `./references/css-patterns.md` for image container styles (hero banners, inl
 
 **Prompt craft:** Match the image to the page's palette and aesthetic direction. Specify the style (3D render, technical illustration, watercolor, isometric, flat vector, etc.) and mention dominant colors from your CSS variables. Use `--aspect-ratio 16:9` for hero banners, `--aspect-ratio 1:1` for inline illustrations. Keep prompts specific — "isometric illustration of a message queue with cyan nodes on dark navy background" beats "a diagram of a queue."
 
-### 3. Style
+### 5. Style
 
 Apply these principles to every diagram:
 
-**Typography is the diagram.** Pick a distinctive font pairing from Google Fonts. A display/heading font with character, plus a mono font for technical labels. Never use Inter, Roboto, Arial, or system-ui as the primary font. Load via `<link>` in `<head>`. Include a system font fallback in the `font-family` stack for offline resilience.
+**Typography and color are locked.** Read `./references/brand.md` and copy the Quick Reference CSS block as your starting point. Crimson Pro for body/headings (italic, never bold), Noto Sans Mono for labels/data. Sage/terracotta/muted gold palette. Both light and dark themes are pre-defined — use them exactly.
 
-**Color tells a story.** Use CSS custom properties for the full palette. Define at minimum: `--bg`, `--surface`, `--border`, `--text`, `--text-dim`, and 3-5 accent colors. Each accent should have a full and a dim variant (for backgrounds). Name variables semantically when possible (`--pipeline-step` not `--blue-3`). Support both themes. Put your primary aesthetic in `:root` and the alternate in the media query:
+**Surfaces whisper, they don't shout.** Thin 1px borders, no shadows by default (hover only), no colored left-accents. KPI grids use the 1px-gap divider pattern from brand.md. Border-radius: 0 on KPI cards, 8px on chart containers.
 
-```css
-/* Light-first (editorial, paper/ink, blueprint): */
-:root { /* light values */ }
-@media (prefers-color-scheme: dark) { :root { /* dark values */ } }
-
-/* Dark-first (neon, IDE-inspired, terminal): */
-:root { /* dark values */ }
-@media (prefers-color-scheme: light) { :root { /* light values */ } }
-```
-
-**Surfaces whisper, they don't shout.** Build depth through subtle lightness shifts (2-4% between levels), not dramatic color changes. Borders should be low-opacity rgba (`rgba(255,255,255,0.08)` in dark mode, `rgba(0,0,0,0.08)` in light) — visible when you look, invisible when you don't.
-
-**Backgrounds create atmosphere.** Don't use flat solid colors for the page background. Subtle gradients, faint grid patterns via CSS, or gentle radial glows behind focal areas. The background should feel like a space, not a void.
+**Backgrounds are clean.** Flat warm cream (`--bg`). No gradients, no dot grids, no radial glows. The editorial aesthetic relies on typography and whitespace, not atmospheric backgrounds.
 
 **Visual weight signals importance.** Not every section deserves equal visual treatment. Executive summaries and key metrics should dominate the viewport on load (larger type, more padding, subtle accent-tinted background zone). Reference sections (file maps, dependency lists, decision logs) should be compact and stay out of the way. Use `<details>/<summary>` for sections that are useful but not primary — the collapsible pattern is in `./references/css-patterns.md`.
 
@@ -119,7 +140,12 @@ Apply these principles to every diagram:
 
 **Animation earns its place.** Staggered fade-ins on page load are almost always worth it — they guide the eye through the diagram's hierarchy. Mix animation types by role: `fadeUp` for cards, `fadeScale` for KPIs and badges, `drawIn` for SVG connectors, `countUp` for hero numbers. Hover transitions on interactive-feeling elements make the diagram feel alive. Always respect `prefers-reduced-motion`. CSS transitions and keyframes handle most cases. For orchestrated multi-element sequences, anime.js via CDN is available (see `./references/libraries.md`).
 
-### 4. Deliver
+**Methodology guardrails** (apply after styling, before delivery):
+- **Memory limit**: 5 or fewer colors encoding different data categories. Beyond that, merge categories or use layered progressive disclosure.
+- **Decoration audit**: For each visual element, is it encoding data or just looking nice? Decoration is fine — but conscious, not default.
+- **Contrast hierarchy**: Bright/saturated = important data. Subdued/gray = context. Use preattentive features (color, size, weight) for instant hierarchy. Never make everything equally vivid.
+
+### 6. Deliver
 
 **Output location:** Write to `~/.agent/diagrams/`. Use a descriptive filename based on content: `modem-architecture.html`, `pipeline-flow.html`, `schema-overview.html`. The directory persists across sessions.
 
@@ -186,6 +212,16 @@ Cell content:
 ### Timeline / Roadmap Views
 Vertical or horizontal timeline with a central line (CSS pseudo-element). Phase markers as circles on the line. Content cards branching left/right (alternating) or all to one side. Date labels on the line. Color progression from past (muted) to future (vivid).
 
+### Data Charts / Statistical Visualizations
+
+Three libraries cover different chart needs. Pick by the chart type, not by preference:
+
+- **Observable Plot**: First choice for scatter, dot strip, line, area, heatmap. Declarative, renders SVG, inherits CSS colors, handles axes/legends/tooltips automatically. Import via ESM.
+- **D3.js**: For layouts Plot can't handle — treemap (`d3-hierarchy`), Sankey (`d3-sankey`), choropleth (`d3-geo`). More code, more control. Import via ESM alongside Plot or standalone.
+- **Chart.js**: Canvas-based — bar, line, radar, doughnut. Best for dashboard KPI widgets where you need quick, clean charts. Import via UMD `<script src>`.
+
+For CSS container patterns (`.chart-wrap`, `.d3-chart-wrap`, `.chart-annotation`), see `./references/css-patterns.md`. For CDN imports, theming, and working examples, see `./references/libraries.md`. The reference template at `./templates/data-chart.html` demonstrates all three libraries in one page.
+
 ### Dashboard / Metrics Overview
 Card grid layout. Hero numbers large and prominent. Sparklines via inline SVG `<polyline>`. Progress bars via CSS `linear-gradient` on a div. For real charts (bar, line, pie), use **Chart.js via CDN** (see `./references/libraries.md`). KPI cards with trend indicators (up/down arrows, percentage deltas).
 
@@ -223,3 +259,16 @@ Before delivering, verify:
 - **No overflow**: Resize the browser to different widths. No content should clip or escape its container. Every grid and flex child needs `min-width: 0`. Side-by-side panels need `overflow-wrap: break-word`. Never use `display: flex` on `<li>` for marker characters — it creates anonymous flex items that can't shrink, causing lines with many inline `<code>` badges to overflow. Use absolute positioning for markers instead. See the Overflow Protection section in `./references/css-patterns.md`.
 - **Mermaid zoom controls**: Every `.mermaid-wrap` container must have zoom controls (+/−/reset buttons), Ctrl/Cmd+scroll zoom, and click-and-drag panning. Complex diagrams render too small without them. The cursor should change to `grab` when zoomed in and `grabbing` while dragging. See `./references/css-patterns.md` for the full pattern.
 - **File opens cleanly**: No console errors, no broken font loads, no layout shifts.
+
+### Methodology Gates
+
+Run these after the visual checks above. Each maps to a principle from `./references/methodology-playbook.md`.
+
+| Check | Pass Criteria | Fix |
+|-------|--------------|-----|
+| Task-encoding alignment | Cleveland-McGill encoding matches reader task from Step 1 | Swap chart type |
+| Entry layer clarity | One clear takeaway visible without scrolling | Add/strengthen hero |
+| Annotation presence | At least 1 editorial callout per data-heavy section | Add "Notice..." annotations |
+| Category count | 5 or fewer distinct colors/symbols encoding data | Merge or layer |
+| Gestalt coherence | Related elements grouped by proximity; sections by whitespace | Adjust spacing |
+| Redundancy balance | Novel forms include explanation of how to read them | Add reading guide |
