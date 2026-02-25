@@ -1,0 +1,45 @@
+name: Auto-tag published skills
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'publish/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Extract skill name and version from branch
+        id: extract
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          # Branch format: publish/{name}/v{version}
+          SKILL_NAME=$(echo "$BRANCH" | sed 's|^publish/||' | sed 's|/v[0-9].*$||')
+          VERSION=$(echo "$BRANCH" | grep -oP 'v\d+\.\d+\.\d+.*$')
+          TAG="${SKILL_NAME}/${VERSION}"
+          echo "skill_name=${SKILL_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+
+      - name: Verify skill directory exists
+        run: |
+          if [ ! -d "skills/${{ steps.extract.outputs.skill_name }}" ] && [ ! -d "${{ steps.extract.outputs.skill_name }}" ]; then
+            echo "::error::Skill directory not found for ${{ steps.extract.outputs.skill_name }}"
+            exit 1
+          fi
+
+      - name: Create and push tag
+        run: |
+          TAG="${{ steps.extract.outputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::warning::Tag $TAG already exists, skipping"
+            exit 0
+          fi
+          git tag "$TAG" "${{ github.event.pull_request.merge_commit_sha }}"
+          git push origin "$TAG"
+          echo "Created tag: $TAG"
