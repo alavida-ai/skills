@@ -141,6 +141,7 @@ Read the template selected in the design brief. Don't memorize it — read it ea
 | Data flow | **Mermaid** with edge labels | Connections and data descriptions need automatic edge routing |
 | ER / schema diagram | **Mermaid** | Relationship lines between many entities need auto-routing |
 | State machine | **Mermaid** | State transitions with labeled edges need automatic layout |
+| Skill statechart | **Mermaid** + metadata JSON | State transitions + interactive detail panel (use `./templates/skill-statechart.html`) |
 | Mind map | **Mermaid** | Hierarchical branching needs automatic positioning |
 | Data table | HTML `<table>` | Semantic markup, accessibility, copy-paste behavior |
 | Timeline | CSS (central line + cards) | Simple linear layout doesn't need a layout engine |
@@ -248,6 +249,19 @@ Two approaches depending on what matters more:
 
 **`stateDiagram-v2` label caveat:** Transition labels have a strict parser — colons, parentheses, `<br/>`, HTML entities, and most special characters cause silent parse failures ("Syntax error in text"). If your labels need any of these (e.g., `cancel()`, `curate: true`, multi-line labels), use `flowchart LR` instead with rounded nodes and quoted edge labels (`|"label text"|`). Flowcharts handle all special characters and support `<br/>` for line breaks. Reserve `stateDiagram-v2` for simple single-word or plain-text labels.
 
+### Skill Statecharts
+Two modes for visualizing SKILL.md workflows as interactive statecharts.
+
+**Audit mode** (SKILL.md → statechart): Read a SKILL.md, classify its archetype (linear-pipeline, cyclical-workflow, interactive-state-machine, parallel-orchestration), extract states from prose patterns, generate metadata JSON + Mermaid diagram, and render a combined editorial + interactive page. Uses `./prompts/skill-statechart.md` for the extraction taxonomy and `./templates/skill-statechart.html` for the combined layout.
+
+**Design mode** (statechart → SKILL.md): Sketch states and transitions interactively, then scaffold SKILL.md sections from the finalized metadata. States become phases, guards become exit conditions, reads/writes become file references.
+
+**Combined layout:** The output page has two layers. First, editorial sections that tell the skill's story accessibly — hero description, trigger cards (when the skill fires), phase cards with narrative summaries, decision pipelines (key choice states as horizontal steps), and reference pills. Second, an interactive Mermaid statechart with click-for-context detail panel showing actions, guards, file I/O, and invocations for each state. The editorial layer provides overview; the interactive layer provides depth.
+
+**Rendering strategy:** Use `stateDiagram-v2` for ≤15 states with plain-text labels. Fall back to `flowchart TD` or `flowchart LR` for complex cases (special characters, large graphs, subgraphs). Brand-palette `classDef` styles distinguish state types: sage for normal, terracotta for user-gates, muted gold for choice/decision, dashed terracotta for error states.
+
+**Validation:** Pipe Mermaid code through `./scripts/validate-mermaid.sh` before rendering. Exit 0 = valid, exit 2 = syntax error (fix and retry). Non-blocking if mmdc is not installed.
+
 ### Mind Maps / Hierarchical Breakdowns
 **Use Mermaid.** Use `mindmap` syntax for hierarchical branching from a root node. Mermaid handles the radial layout automatically. Style with `themeVariables` to control node colors at each depth level.
 
@@ -338,6 +352,7 @@ Before delivering, verify:
 - **No overflow**: Resize the browser to different widths. No content should clip or escape its container. Every grid and flex child needs `min-width: 0`. Side-by-side panels need `overflow-wrap: break-word`. Never use `display: flex` on `<li>` for marker characters — it creates anonymous flex items that can't shrink, causing lines with many inline `<code>` badges to overflow. Use absolute positioning for markers instead. See the Overflow Protection section in `./references/css-patterns.md`.
 - **Mermaid zoom controls**: Every `.mermaid-wrap` container must have zoom controls (+/−/reset buttons), Ctrl/Cmd+scroll zoom, and click-and-drag panning. Complex diagrams render too small without them. The cursor should change to `grab` when zoomed in and `grabbing` while dragging. See `./references/css-patterns.md` for the full pattern.
 - **File opens cleanly**: No console errors, no broken font loads, no layout shifts.
+- **Mermaid syntax validated**: If the page contains a Mermaid diagram, pipe the diagram code through `./scripts/validate-mermaid.sh` before delivering. Exit 0 = valid. Exit 2 = fix syntax and re-render. Non-blocking if mmdc is not installed.
 
 ### Methodology Gates
 
